@@ -27,9 +27,7 @@ import { cn } from "@/lib/utils";
 export default function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 font-semibold text-xl">
-        FinFlow <span className="text-primary">Nexus</span>
-      </SidebarHeader>
+     
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
