@@ -12,11 +12,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <ThemeProvider>
       <SidebarProvider>
-        <div className="finance-layout">
+        <div className="finance-layout w-full">
           <AppSidebar />
-          <div className="finance-main">
+          <div className="finance-main w-full">
             <TopBar />
-            <main className="finance-content">{children}</main>
+            <main className="finance-content w-full">{children}</main>
           </div>
         </div>
       </SidebarProvider>

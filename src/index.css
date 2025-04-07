@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -83,15 +82,22 @@
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 224.3 76.3% 48%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  html, #root {
+    width: 100%;
+    min-height: 100vh;
   }
 }
 
@@ -109,19 +115,19 @@
   }
   
   .finance-layout {
-    @apply min-h-screen flex;
+    @apply min-h-screen flex w-full;
   }
   
   .finance-main {
-    @apply flex-1 overflow-auto;
+    @apply flex-1 overflow-auto w-full;
   }
   
   .finance-header {
-    @apply sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60;
+    @apply sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full;
   }
   
   .finance-content {
-    @apply p-6;
+    @apply p-6 w-full;
   }
   
   .data-grid {
