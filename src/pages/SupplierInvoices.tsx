@@ -1,73 +1,89 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InvoiceForm from "@/components/forms/InvoiceForm";
 import DataTable from "@/components/dashboard/DataTable";
 import { Plus } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data
-const supplierInvoices = [
-  {
-    id: 1,
-    supplierName: "ABC Suppliers",
-    invoiceNumber: "INV-001",
-    date: "2023-03-15",
-    amount: 1250.00,
-    paymentTerms: "Net 30",
-    status: "Paid",
-  },
-  {
-    id: 2,
-    supplierName: "XYZ Corporation",
-    invoiceNumber: "INV-002",
-    date: "2023-03-20",
-    amount: 3500.00,
-    paymentTerms: "Net 15",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    supplierName: "Office Solutions",
-    invoiceNumber: "INV-003",
-    date: "2023-03-25",
-    amount: 750.00,
-    paymentTerms: "Net 30",
-    status: "Paid",
-  },
-  {
-    id: 4,
-    supplierName: "Tech Distributors",
-    invoiceNumber: "INV-004",
-    date: "2023-03-28",
-    amount: 2100.00,
-    paymentTerms: "Net 45",
-    status: "Overdue",
-  },
-  {
-    id: 5,
-    supplierName: "Global Imports",
-    invoiceNumber: "INV-005",
-    date: "2023-03-30",
-    amount: 4250.00,
-    paymentTerms: "Net 30",
-    status: "Pending",
-  },
-];
+interface SupplierInvoice {
+  id: number;
+  supplier_name: string;
+  invoice_number: string;
+  date: string;
+  amount: number;
+  status: "Paid" | "Pending" | "Overdue";
+}
 
 export default function SupplierInvoices() {
   const [activeTab, setActiveTab] = useState("list");
+  const [supplierInvoices, setSupplierInvoices] = useState<SupplierInvoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  // Fetch supplier invoices from Supabase
+  useEffect(() => {
+    async function fetchSupplierInvoices() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('supplier_invoices')
+          .select('*');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setSupplierInvoices(data);
+        }
+      } catch (err: any) {
+        console.error('Error fetching supplier invoices:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSupplierInvoices();
+  }, []);
+  // Function to add a new supplier invoice
+  async function addSupplierInvoice(invoice: Omit<SupplierInvoice, 'id'>) {
+    try {
+      console.log('Adding supplier invoice to Supabase:', invoice);
+      const { data, error } = await supabase
+        .from('supplier_invoices')
+        .insert([invoice])
+        .select();
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      if (data) {
+        console.log('Invoice added successfully:', data[0]);
+        setSupplierInvoices(prev => [...prev, data[0]]);
+      }
+      
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error adding supplier invoice:', err);
+      return { success: false, error: err.message };
+    }
+  }
   
   const columns = [
-    { header: "Supplier", accessorKey: "supplierName" },
-    { header: "Invoice #", accessorKey: "invoiceNumber" },
+    { header: "Supplier", accessorKey: "supplier_name" },
+    { header: "Invoice #", accessorKey: "invoice_number" },
     { header: "Date", accessorKey: "date" },
     { 
       header: "Amount", 
       accessorKey: "amount",
-      cell: (item: any) => `$${item.amount.toFixed(2)}`
+      cell: (item: any) => `R${item.amount.toFixed(2)}`
     },
-    { header: "Payment Terms", accessorKey: "paymentTerms" },
     { 
       header: "Status", 
       accessorKey: "status",
@@ -103,17 +119,53 @@ export default function SupplierInvoices() {
           <TabsTrigger value="create">Create Invoice</TabsTrigger>
         </TabsList>
         <TabsContent value="list" className="mt-6">
-          <DataTable 
-            data={supplierInvoices} 
-            columns={columns}
-            title="Supplier Invoices"
-            onRowClick={() => {}}
-          />
+          {loading ? (
+            <div className="flex justify-center p-8">
+              <p>Loading supplier invoices...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 text-red-700 p-4 rounded-md">
+              Error: {error}
+            </div>
+          ) : (
+            <DataTable 
+              data={supplierInvoices} 
+              columns={columns}
+              title="Supplier Invoices"
+              onRowClick={() => {}}
+            />
+          )}
         </TabsContent>
-        <TabsContent value="create" className="mt-6">
-          <InvoiceForm 
+        <TabsContent value="create" className="mt-6">         
+           <InvoiceForm 
             type="supplier" 
-            onSuccess={() => setActiveTab("list")}
+            onSuccess={(formData) => {
+              // Convert form data to supplier invoice format
+              const newInvoice = {
+                supplier_name: formData.supplierName,
+                invoice_number: formData.invoiceNumber,
+                date: formData.date,
+                amount: parseFloat(formData.amount),
+                status: formData.status
+              };
+                addSupplierInvoice(newInvoice)
+                .then(result => {
+                  if (result.success) {
+                    toast({
+                      title: "Invoice added",
+                      description: "Supplier invoice has been successfully added",
+                      variant: "default"
+                    });
+                    setActiveTab("list");
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: result.error || "Failed to add invoice",
+                      variant: "destructive"
+                    });
+                  }
+                });
+            }}
           />
         </TabsContent>
       </Tabs>

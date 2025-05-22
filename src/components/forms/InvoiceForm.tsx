@@ -58,16 +58,16 @@ const customerInvoiceSchema = z.object({
   dueDate: z.date({
     required_error: "Due date is required",
   }),
+  status: z.string().min(1, "Status is required"),
 });
 
 type InvoiceFormProps = {
   type: "supplier" | "customer";
-  onSuccess?: () => void;
+  onSuccess?: (formData: any) => void;
 };
 
 export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
   const schema = type === "supplier" ? supplierInvoiceSchema : customerInvoiceSchema;
-
   // Initialize the form
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -83,9 +83,9 @@ export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
           customerName: "",
           invoiceNumber: "",
           amount: "",
+          status: "Pending",
         },
   });
-
   function onSubmit(values: z.infer<typeof schema>) {
     console.log(values);
     toast.success(
@@ -95,7 +95,7 @@ export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
       }
     );
     form.reset();
-    if (onSuccess) onSuccess();
+    if (onSuccess) onSuccess(values);
   }
 
   return (
@@ -237,15 +237,13 @@ export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
                   )}
                 />
               )}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
+            </div>            <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount ($)</FormLabel>
+                    <FormLabel>Amount (R)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -259,9 +257,35 @@ export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
                 )}
               />
 
+              {/* Status field for both supplier and customer invoices */}
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Paid">Paid</SelectItem>
+                        <SelectItem value="Overdue">Overdue</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {type === "supplier" && (
-                <>
-                  <FormField
+                <>                  <FormField
                     control={form.control}
                     name="paymentTerms"
                     render={({ field }) => (
@@ -287,39 +311,13 @@ export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Paid">Paid</SelectItem>
-                            <SelectItem value="Overdue">Overdue</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </>
               )}
             </div>
 
             <div className="flex justify-end">
               <Button type="submit">
-                Create {type === "supplier" ? "Supplier" : "Customer"} Invoice
+                Create {type === "supplier" ? "supplier" : "customer"} Invoice
               </Button>
             </div>
           </form>
