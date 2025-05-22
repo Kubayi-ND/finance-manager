@@ -58,7 +58,7 @@ const incomeSchema = z.object({
 
 type TransactionFormProps = {
   type: "expense" | "income";
-  onSuccess?: () => void;
+  onSuccess?: (formData: any) => void;
 };
 
 export default function TransactionForm({ type, onSuccess }: TransactionFormProps) {
@@ -78,10 +78,8 @@ export default function TransactionForm({ type, onSuccess }: TransactionFormProp
           amount: "",
           description: "",
         },
-  });
-
-  function onSubmit(values: z.infer<typeof schema>) {
-    console.log(values);
+  });  function onSubmit(values: z.infer<typeof schema>) {
+    console.log('Form submitted with values:', values);
     toast.success(
       `${type === "expense" ? "Expense" : "Income"} recorded`,
       {
@@ -89,7 +87,10 @@ export default function TransactionForm({ type, onSuccess }: TransactionFormProp
       }
     );
     form.reset();
-    if (onSuccess) onSuccess();
+    // Pass the values to the onSuccess callback if provided
+    if (onSuccess) {
+      onSuccess(values);
+    }
   }
 
   // Expense categories

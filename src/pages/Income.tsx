@@ -1,52 +1,76 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TransactionForm from "@/components/forms/TransactionForm";
 import DataTable from "@/components/dashboard/DataTable";
 import { Plus } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data
-const incomeRecords = [
-  {
-    id: 1,
-    source: "Product Sales",
-    date: "2023-03-05",
-    amount: 3250.00,
-    description: "Sale of products to retail customers",
-  },
-  {
-    id: 2,
-    source: "Services",
-    date: "2023-03-10",
-    amount: 4500.00,
-    description: "Consulting services for Client XYZ",
-  },
-  {
-    id: 3,
-    source: "Investments",
-    date: "2023-03-15",
-    amount: 800.00,
-    description: "Dividend income from investments",
-  },
-  {
-    id: 4,
-    source: "Product Sales",
-    date: "2023-03-20",
-    amount: 2750.00,
-    description: "Sale of products to wholesale customers",
-  },
-  {
-    id: 5,
-    source: "Services",
-    date: "2023-03-25",
-    amount: 3800.00,
-    description: "Consulting services for Client ABC",
-  },
-];
+interface IncomeRecord {
+  id: number;
+  source: string;
+  date: string;
+  amount: number;
+  description: string;
+}
 
 export default function Income() {
   const [activeTab, setActiveTab] = useState("list");
+  const [incomeRecords, setIncomeRecords] = useState<IncomeRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  // Fetch income records from Supabase
+  useEffect(() => {
+    async function fetchIncomeRecords() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('income_records')
+          .select('*');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setIncomeRecords(data);
+        }
+      } catch (err: any) {
+        console.error('Error fetching income records:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchIncomeRecords();
+  }, []);
+
+  // Function to add a new income record
+  async function addIncomeRecord(record: Omit<IncomeRecord, 'id'>) {
+    try {
+      const { data, error } = await supabase
+        .from('income_records')
+        .insert([record])
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setIncomeRecords(prev => [...prev, data[0]]);
+      }
+      
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error adding income record:', err);
+      return { success: false, error: err.message };
+    }
+  }
   
   const columns = [
     { header: "Source", accessorKey: "source" },
@@ -54,7 +78,7 @@ export default function Income() {
     { 
       header: "Amount", 
       accessorKey: "amount",
-      cell: (item: any) => `$${item.amount.toFixed(2)}`
+      cell: (item: any) => `R${item.amount.toFixed(2)}`
     },
     { header: "Description", accessorKey: "description" },
   ];
@@ -77,17 +101,55 @@ export default function Income() {
           <TabsTrigger value="create">Record Income</TabsTrigger>
         </TabsList>
         <TabsContent value="list" className="mt-6">
-          <DataTable 
-            data={incomeRecords} 
-            columns={columns}
-            title="Income Records"
-            onRowClick={() => {}}
-          />
+          {loading ? (
+            <div className="flex justify-center p-8">
+              <p>Loading income records...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 text-red-700 p-4 rounded-md">
+              Error: {error}
+            </div>
+          ) : (
+            <DataTable 
+              data={incomeRecords} 
+              columns={columns}
+              title="Income Records"
+              onRowClick={() => {}}
+            />
+          )}
         </TabsContent>
-        <TabsContent value="create" className="mt-6">
-          <TransactionForm 
+        <TabsContent value="create" className="mt-6">          <TransactionForm 
             type="income" 
-            onSuccess={() => setActiveTab("list")}
+            onSuccess={(formData) => {
+              // Convert form data to income record format
+              console.log('Income form data received:', formData);
+              
+              // Handle the form data according to the expected structure
+              const newRecord = {
+                source: formData.source,
+                date: formData.date,
+                amount: parseFloat(formData.amount),
+                description: formData.description || ''
+              };
+              
+              addIncomeRecord(newRecord)
+                .then(result => {
+                  if (result.success) {
+                    toast({
+                      title: "Income added",
+                      description: "Income record has been successfully added",
+                      variant: "default"
+                    });
+                    setActiveTab("list");
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: result.error || "Failed to add income record",
+                      variant: "destructive"
+                    });
+                  }
+                });
+            }}
           />
         </TabsContent>
       </Tabs>

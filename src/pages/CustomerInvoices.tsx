@@ -1,73 +1,89 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InvoiceForm from "@/components/forms/InvoiceForm";
 import DataTable from "@/components/dashboard/DataTable";
 import { Plus } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data
-const customerInvoices = [
-  {
-    id: 1,
-    customerName: "Acme Corp",
-    invoiceNumber: "INV-101",
-    date: "2023-03-10",
-    amount: 2500.00,
-    dueDate: "2023-04-10",
-    status: "Paid",
-  },
-  {
-    id: 2,
-    customerName: "Smith Enterprises",
-    invoiceNumber: "INV-102",
-    date: "2023-03-15",
-    amount: 3750.00,
-    dueDate: "2023-04-15",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    customerName: "Johnson & Co",
-    invoiceNumber: "INV-103",
-    date: "2023-03-18",
-    amount: 1850.00,
-    dueDate: "2023-04-18",
-    status: "Overdue",
-  },
-  {
-    id: 4,
-    customerName: "Bright Solutions",
-    invoiceNumber: "INV-104",
-    date: "2023-03-22",
-    amount: 4200.00,
-    dueDate: "2023-04-22",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    customerName: "Tech Innovators",
-    invoiceNumber: "INV-105",
-    date: "2023-03-28",
-    amount: 5500.00,
-    dueDate: "2023-04-28",
-    status: "Paid",
-  },
-];
+interface CustomerInvoice {
+  id: number;
+  customer_name: string;
+  invoice_number: string;
+  date: string;
+  amount: number;
+  due_date: string;
+  status: "Paid" | "Pending" | "Overdue";
+}
 
 export default function CustomerInvoices() {
   const [activeTab, setActiveTab] = useState("list");
+  const [customerInvoices, setCustomerInvoices] = useState<CustomerInvoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  // Fetch customer invoices from Supabase
+  useEffect(() => {
+    async function fetchCustomerInvoices() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('customer_invoices')
+          .select('*');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setCustomerInvoices(data);
+        }
+      } catch (err: any) {
+        console.error('Error fetching customer invoices:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCustomerInvoices();
+  }, []);
+
+  // Function to add a new customer invoice
+  async function addCustomerInvoice(invoice: Omit<CustomerInvoice, 'id'>) {
+    try {
+      const { data, error } = await supabase
+        .from('customer_invoices')
+        .insert([invoice])
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setCustomerInvoices(prev => [...prev, data[0]]);
+      }
+      
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error adding customer invoice:', err);
+      return { success: false, error: err.message };
+    }
+  }
   
   const columns = [
-    { header: "Customer", accessorKey: "customerName" },
-    { header: "Invoice #", accessorKey: "invoiceNumber" },
+    { header: "Customer", accessorKey: "customer_name" },
+    { header: "Invoice #", accessorKey: "invoice_number" },
     { header: "Date", accessorKey: "date" },
     { 
       header: "Amount", 
       accessorKey: "amount",
-      cell: (item: any) => `$${item.amount.toFixed(2)}`
+      cell: (item: any) => `R${item.amount.toFixed(2)}`
     },
-    { header: "Due Date", accessorKey: "dueDate" },
+    { header: "Due Date", accessorKey: "due_date" },
     { 
       header: "Status", 
       accessorKey: "status",
@@ -103,17 +119,55 @@ export default function CustomerInvoices() {
           <TabsTrigger value="create">Create Invoice</TabsTrigger>
         </TabsList>
         <TabsContent value="list" className="mt-6">
-          <DataTable 
-            data={customerInvoices} 
-            columns={columns}
-            title="Customer Invoices"
-            onRowClick={() => {}}
-          />
+          {loading ? (
+            <div className="flex justify-center p-8">
+              <p>Loading customer invoices...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 text-red-700 p-4 rounded-md">
+              Error: {error}
+            </div>
+          ) : (
+            <DataTable 
+              data={customerInvoices} 
+              columns={columns}
+              title="Customer Invoices"
+              onRowClick={() => {}}
+            />
+          )}
         </TabsContent>
         <TabsContent value="create" className="mt-6">
           <InvoiceForm 
             type="customer" 
-            onSuccess={() => setActiveTab("list")}
+            onSuccess={(formData) => {
+              // Convert form data to customer invoice format
+              const newInvoice = {
+                customer_name: formData.customerName,
+                invoice_number: formData.invoiceNumber,
+                date: formData.date,
+                amount: parseFloat(formData.amount),
+                due_date: formData.dueDate || formData.date,
+                status: formData.status
+              };
+              
+              addCustomerInvoice(newInvoice)
+                .then(result => {
+                  if (result.success) {
+                    toast({
+                      title: "Invoice added",
+                      description: "Supplier invoice has been successfully added",
+                      variant: "default"
+                    });
+                    setActiveTab("list");
+                  } else {
+                    toast({
+                      title: "Error",
+                      description: result.error || "Failed to add invoice",
+                      variant: "destructive"
+                    });
+                  }
+                });
+            }}
           />
         </TabsContent>
       </Tabs>
