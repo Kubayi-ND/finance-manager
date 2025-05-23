@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Download, Printer } from "lucide-react";
+import { Download} from "lucide-react";
+import { formatIncomeStatementForExport, exportToExcel } from "@/lib/excel-export";
 
 interface IncomeStatementProps {
   startDate: Date;
@@ -28,6 +29,12 @@ export default function IncomeStatement({
   const totalRevenue = data.revenues.reduce((sum, item) => sum + item.amount, 0);
   const totalExpenses = data.expenses.reduce((sum, item) => sum + item.amount, 0);
   const netProfit = totalRevenue - totalExpenses;
+  
+  // Handle export to Excel
+  const handleExport = () => {
+    const formattedData = formatIncomeStatementForExport(data, startDate, endDate);
+    exportToExcel(formattedData, 'IncomeStatement');
+  };
 
   return (
     <Card className="w-full">
@@ -38,13 +45,8 @@ export default function IncomeStatement({
             <CardDescription>
               {format(startDate, "MMM d, yyyy")} - {format(endDate, "MMM d, yyyy")}
             </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-            <Button variant="outline" size="sm">
+          </div>          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>

@@ -64,18 +64,6 @@ export default function DataTable<T>({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Export <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Export as PDF</DropdownMenuItem>
-              <DropdownMenuItem>Export as CSV</DropdownMenuItem>
-              <DropdownMenuItem>Export as Excel</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
       <div className="data-grid-container">
@@ -122,7 +110,6 @@ export default function DataTable<T>({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>View</DropdownMenuItem>
                         <DropdownMenuItem>Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

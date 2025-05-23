@@ -14,9 +14,7 @@ export default function TopBar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
+         
          
         </div>
       </div>

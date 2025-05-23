@@ -109,8 +109,6 @@ export default function ReportForm({ onGenerate }: ReportFormProps) {
                       <SelectItem value="income-statement">Income Statement</SelectItem>
                       <SelectItem value="expense-report">Expense Report</SelectItem>
                       <SelectItem value="sales-report">Sales Report</SelectItem>
-                      <SelectItem value="supplier-performance">Supplier Performance</SelectItem>
-                      <SelectItem value="customer-performance">Customer Performance</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
