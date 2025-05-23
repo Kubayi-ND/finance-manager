@@ -141,10 +141,9 @@ export default function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              
-            </SidebarMenuButton>
+          <SidebarMenuItem className="text-neutral-500">
+              <p className="text-sm text-center">© 2025 Ntsumi Kubayi. All Rights Reserved.</p>
+              <p className="text-xs text-center">Powerd by Vite, Vercel and Supabase</p>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
