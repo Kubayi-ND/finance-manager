@@ -71,7 +71,6 @@ export default function Dashboard() {
           });
           
           // Load some sample data to display the UI
-          setTransactions(getSampleTransactions());
           setRevenueData(getSampleRevenueData());
           setExpensesData(getSampleExpenseData());
           setStats(getSampleStats());
@@ -101,34 +100,7 @@ export default function Dashboard() {
   }, []);
   
   // Sample data functions for fallback
-  function getSampleTransactions() {
-    return [
-      { 
-        id: 1, 
-        description: "ABC Suppliers Invoice", 
-        date: "2025-04-01", 
-        amount: 1250.00, 
-        type: "Supplier Invoice", 
-        status: "Paid" 
-      },
-      { 
-        id: 2, 
-        description: "XYZ Corp Payment", 
-        date: "2025-04-02", 
-        amount: 3200.00, 
-        type: "Income", 
-        status: "Completed" 
-      },
-      { 
-        id: 3, 
-        description: "Office Rent", 
-        date: "2025-04-03", 
-        amount: 2000.00, 
-        type: "Expense", 
-        status: "Paid" 
-      }
-    ];
-  }
+ 
   
   function getSampleRevenueData() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

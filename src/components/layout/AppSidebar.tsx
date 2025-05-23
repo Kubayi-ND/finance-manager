@@ -5,8 +5,6 @@ import {
   LayoutDashboard,
   Receipt,
   Wallet,
-  FileText,
-  Settings,
   DollarSign,
   Package
 } from "lucide-react";
@@ -145,18 +143,7 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink
-                to="/settings"
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-4 py-2",
-                    isActive ? "text-primary font-medium" : "text-foreground"
-                  )
-                }
-              >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
-              </NavLink>
+              
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

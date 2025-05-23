@@ -1,8 +1,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { Bell, User } from "lucide-react";
+
 
 export default function TopBar() {
   return (

@@ -11,7 +11,6 @@ import CustomerInvoices from "./pages/CustomerInvoices";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
 import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,11 +52,7 @@ const App = () => (
               <Reports />
             </MainLayout>
           } />
-          <Route path="/settings" element={
-            <MainLayout>
-              <Settings />
-            </MainLayout>
-          } />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
