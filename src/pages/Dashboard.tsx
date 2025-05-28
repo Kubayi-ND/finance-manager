@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { DollarSign, Package, Wallet } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import DataTable from "@/components/dashboard/DataTable";
-import RevenueChart from "@/components/dashboard/RevenueChart";
+import RevenueChart from "@/components/dashboard/ProfitChart";
 import ExpensesChart from "@/components/dashboard/ExpensesChart";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
@@ -276,8 +276,8 @@ export default function Dashboard() {
           </div>
           
           <div className="grid gap-4 md:grid-cols-2">
-            <RevenueChart data={revenueData} />
-            <ExpensesChart data={expensesData} />
+            <RevenueChart  />
+            <ExpensesChart />
           </div>
           
           <DataTable 

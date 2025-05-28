@@ -1,6 +1,7 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface ExpensesChartProps {
   data: {
@@ -10,7 +11,46 @@ interface ExpensesChartProps {
   }[];
 }
 
-export default function ExpensesChart({ data }: ExpensesChartProps) {
+export default function ExpensesChart() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    async function fetchExpensesData() {
+      try {
+        const { data: expenseRecords, error } = await supabase
+          .from('expense_records')
+          .select('category, amount');
+
+        if (error) throw error;
+
+        const aggregatedData = expenseRecords.reduce((acc, record) => {
+          const existingCategory = acc.find(item => item.name === record.category);
+          if (existingCategory) {
+            existingCategory.value += record.amount;
+          } else {
+            acc.push({ name: record.category, value: record.amount, color: getRandomColor() });
+          }
+          return acc;
+        }, []);
+
+        setData(aggregatedData);
+      } catch (error) {
+        console.error('Error fetching expense data:', error);
+      }
+    }
+
+    fetchExpensesData();
+  }, []);
+
+  function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
   return (
     <Card>
       <CardHeader>
