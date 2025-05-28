@@ -41,10 +41,10 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                 style={{ fontSize: '12px' }}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `R${value}`}
               />
               <Tooltip 
-                formatter={(value) => [`$${value}`, undefined]} 
+                formatter={(value) => [`R${value}`, undefined]} 
                 contentStyle={{ 
                   backgroundColor: 'var(--background)',
                   borderColor: 'var(--border)',

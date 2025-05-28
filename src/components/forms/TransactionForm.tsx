@@ -5,6 +5,8 @@ import { z } from "zod";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useSession } from "@supabase/auth-helpers-react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +64,8 @@ type TransactionFormProps = {
 };
 
 export default function TransactionForm({ type, onSuccess }: TransactionFormProps) {
+  const session = useSession();
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const schema = type === "expense" ? expenseSchema : incomeSchema;
 
   // Initialize the form
@@ -78,7 +82,18 @@ export default function TransactionForm({ type, onSuccess }: TransactionFormProp
           amount: "",
           description: "",
         },
-  });  function onSubmit(values: z.infer<typeof schema>) {
+  }); 
+
+  useEffect(() => {
+    setIsSignedIn(!!session);
+  }, [session]);
+
+  function onSubmit(values: z.infer<typeof schema>) {
+    if (!session) {
+      toast.error("Please sign-in to perform this action.");
+      return;
+    }
+
     console.log('Form submitted with values:', values);
     toast.success(
       `${type === "expense" ? "Expense" : "Income"} recorded`,
@@ -235,7 +250,7 @@ export default function TransactionForm({ type, onSuccess }: TransactionFormProp
                 name="amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount ($)</FormLabel>
+                    <FormLabel>Amount (R)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

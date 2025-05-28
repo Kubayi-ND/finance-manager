@@ -15,9 +15,7 @@ export default function ExpensesChart({ data }: ExpensesChartProps) {
     <Card>
       <CardHeader>
         <CardTitle>Expense Breakdown</CardTitle>
-        <CardDescription>
-          Distribution of expenses by category
-        </CardDescription>
+        
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full">
