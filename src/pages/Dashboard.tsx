@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChartBig, DollarSign, Package, Receipt, Wallet } from "lucide-react";
+import { DollarSign, Package, Wallet } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import DataTable from "@/components/dashboard/DataTable";
 import RevenueChart from "@/components/dashboard/RevenueChart";
@@ -41,10 +41,9 @@ export default function Dashboard() {
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [expensesData, setExpensesData] = useState<any[]>([]);
   const [stats, setStats] = useState({
-    totalRevenue: 0,
-    customerInvoices: { total: 0, pending: 0, paid: 0 },
-    supplierInvoices: { total: 0, pending: 0, paid: 0 },
-    totalExpenses: 0
+    totalIncome: 0,
+    totalExpenses: 0,
+    profit: 0
   });
 
   // Fetch all data on component mount  
@@ -70,10 +69,6 @@ export default function Dashboard() {
             variant: 'default'
           });
           
-          // Load some sample data to display the UI
-          setRevenueData(getSampleRevenueData());
-          setExpensesData(getSampleExpenseData());
-          setStats(getSampleStats());
         } else {
           // Database exists, load real data
           await Promise.all([
@@ -99,108 +94,26 @@ export default function Dashboard() {
     fetchDashboardData();
   }, []);
   
-  // Sample data functions for fallback
- 
-  
-  function getSampleRevenueData() {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months.map(month => ({
-      month,
-      revenue: Math.floor(Math.random() * 10000) + 2000,
-      expenses: Math.floor(Math.random() * 6000) + 1000
-    }));
-  }
-  
-  function getSampleExpenseData() {
-    return [
-      { name: "Rent", value: 3000, color: "#2563eb" },
-      { name: "Utilities", value: 1500, color: "#10b981" },
-      { name: "Salaries", value: 8000, color: "#f59e0b" },
-      { name: "Supplies", value: 1200, color: "#8b5cf6" },
-      { name: "Marketing", value: 2000, color: "#ef4444" }
-    ];
-  }
-  
-  function getSampleStats() {
-    return {
-      totalRevenue: 45231.89,
-      customerInvoices: { total: 24500.00, pending: 8, paid: 12 },
-      supplierInvoices: { total: 18400.00, pending: 4, paid: 10 },
-      totalExpenses: 15000.00
-    };
-  }
-
   // Fetch recent transactions from all sources
   async function fetchTransactions() {
-    try {      // Get customer invoices
-      const { data: customerInvoices, error: customerError } = await supabase
-        .from('customer_invoices')
-        .select('*')
-        .limit(5);
-      
-      if (customerError) throw customerError;
-        // Get supplier invoices
-      const { data: supplierInvoices, error: supplierError } = await supabase
-        .from('supplier_invoices')
-        .select('*')
-        .limit(5);
-      
-      if (supplierError) throw supplierError;
-        // Get expenses
-      const { data: expenses, error: expensesError } = await supabase
-        .from('expense_records')
-        .select('*')
-        .limit(5);
-      
-      if (expensesError) throw expensesError;
-        // Get income
-      const { data: incomes, error: incomesError } = await supabase
+    try {
+      const { data: income, error: incomeError } = await supabase
         .from('income_records')
         .select('*')
-        .limit(5);
+        .limit(100);
       
-      if (incomesError) throw incomesError;
+      if (incomeError) throw incomeError;
       
-      // Transform and combine all transactions
-      const allTransactions = [
-        ...(customerInvoices?.map(invoice => ({
-          id: invoice.id,
-          description: `Invoice to ${invoice.customer_name}: ${invoice.invoice_number || ''}`,
-          date: invoice.date,
-          amount: invoice.amount,
-          type: 'Customer Invoice',
-          status: invoice.status
-        })) || []),
-        ...(supplierInvoices?.map(invoice => ({
-          id: invoice.id,
-          description: `Invoice from ${invoice.supplier_name}: ${invoice.invoice_number || ''}`,
-          date: invoice.date,
-          amount: invoice.amount,
-          type: 'Supplier Invoice',
-          status: invoice.status
-        })) || []),
-        ...(expenses?.map(expense => ({
-          id: expense.id,
-          description: expense.description || expense.category,
-          date: expense.date,
-          amount: expense.amount,
-          type: 'Expense',
-          status: 'Paid'
-        })) || []),
-        ...(incomes?.map(income => ({
+      const sortedTransactions = income
+        .map(income => ({
           id: income.id,
-          description: income.description || income.source,
+          description: income.description || income.category,
           date: income.date,
           amount: income.amount,
-          type: 'Income',
-          status: 'Completed'
-        })) || [])
-      ];
-      
-      // Sort by date (newest first) and take top 10
-      const sortedTransactions = allTransactions
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 10);
+          type: 'Expense',
+          status: 'Paid'
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
       setTransactions(sortedTransactions);
     } catch (error) {
@@ -221,24 +134,6 @@ export default function Dashboard() {
         revenue: 0,
         expenses: 0
       }));
-        // Get customer invoices and income for revenue
-      const { data: revenueRecords, error: revenueError } = await supabase
-        .from('income_records')
-        .select('date, amount')
-        .gte('date', `${currentYear}-01-01T00:00:00`)
-        .lte('date', `${currentYear}-12-31T23:59:59`);
-        
-      if (revenueError) throw revenueError;
-        // Get customer invoices for revenue
-      const { data: invoiceRecords, error: invoiceError } = await supabase
-        .from('customer_invoices')
-        .select('date, amount')
-        .eq('status', 'Paid') // Only count paid invoices as revenue
-        // Format dates with proper ISO format to avoid 400 errors
-        .gte('date', `${currentYear}-01-01T00:00:00`)
-        .lte('date', `${currentYear}-12-31T23:59:59`);
-        
-      if (invoiceError) throw invoiceError;
         // Get expenses
       const { data: expenseRecords, error: expenseError } = await supabase
         .from('expense_records')
@@ -247,43 +142,7 @@ export default function Dashboard() {
         .lte('date', `${currentYear}-12-31T23:59:59`);
         
       if (expenseError) throw expenseError;
-        // Get supplier invoices as expenses
-      const { data: supplierRecords, error: supplierError } = await supabase
-        .from('supplier_invoices')
-        .select('date, amount')
-        .eq('status', 'Paid') // Only count paid invoices as expenses
-        .gte('date', `${currentYear}-01-01T00:00:00`)
-        .lte('date', `${currentYear}-12-31T23:59:59`);
-        
-      if (supplierError) throw supplierError;
         // Process revenue data with better error handling
-      revenueRecords?.forEach(record => {
-        try {
-          const date = new Date(record.date);
-          if (!isNaN(date.getTime())) { // Check if date is valid
-            const monthIndex = date.getMonth();
-            initialRevenueData[monthIndex].revenue += Number(record.amount);
-          } else {
-            console.warn(`Invalid date found in income record:`, record);
-          }
-        } catch (err) {
-          console.error(`Error processing income record:`, record, err);
-        }
-      });
-        invoiceRecords?.forEach(record => {
-        try {
-          const date = new Date(record.date);
-          if (!isNaN(date.getTime())) { // Check if date is valid
-            const monthIndex = date.getMonth();
-            initialRevenueData[monthIndex].revenue += Number(record.amount);
-          } else {
-            console.warn(`Invalid date found in customer invoice:`, record);
-          }
-        } catch (err) {
-          console.error(`Error processing customer invoice:`, record, err);
-        }
-      });
-        // Process expense data with better error handling
       expenseRecords?.forEach(record => {
         try {
           const date = new Date(record.date);
@@ -295,19 +154,6 @@ export default function Dashboard() {
           }
         } catch (err) {
           console.error(`Error processing expense record:`, record, err);
-        }
-      });
-        supplierRecords?.forEach(record => {
-        try {
-          const date = new Date(record.date);
-          if (!isNaN(date.getTime())) { // Check if date is valid
-            const monthIndex = date.getMonth();
-            initialRevenueData[monthIndex].expenses += Number(record.amount);
-          } else {
-            console.warn(`Invalid date found in supplier invoice:`, record);
-          }
-        } catch (err) {
-          console.error(`Error processing supplier invoice:`, record, err);
         }
       });
       
@@ -351,69 +197,23 @@ export default function Dashboard() {
   // Fetch stats for the StatCards
   async function fetchStats() {
     try {
-      // Calculate total revenue
-      const { data: revenue, error: revenueError } = await supabase
+      const { data: incomeRecords, error: incomeError } = await supabase
         .from('income_records')
         .select('amount');
-        
-      if (revenueError) throw revenueError;
-      
-      // Get customer invoices
-      const { data: customerInvoices, error: customerError } = await supabase
-        .from('customer_invoices')
-        .select('amount, status');
-      
-      if (customerError) throw customerError;
-      
-      // Get supplier invoices
-      const { data: supplierInvoices, error: supplierError } = await supabase
-        .from('supplier_invoices')
-        .select('amount, status');
-      
-      if (supplierError) throw supplierError;
-      
-      // Calculate total expenses
-      const { data: expenses, error: expensesError } = await supabase
+
+      if (incomeError) throw incomeError;
+
+      const { data: expenseRecords, error: expenseError } = await supabase
         .from('expense_records')
         .select('amount');
-        
-      if (expensesError) throw expensesError;
-      
-      // Calculate totals and stats
-      const totalRevenue = (
-        (revenue?.reduce((sum, record) => sum + Number(record.amount), 0) || 0) +
-        (customerInvoices?.reduce((sum, invoice) => sum + Number(invoice.amount), 0) || 0)
-      );
-      
-      const customerInvoicesTotal = customerInvoices?.reduce((sum, invoice) => sum + Number(invoice.amount), 0) || 0;
-      const customerInvoicesPending = customerInvoices?.filter(i => i.status === 'Pending').length || 0;
-      const customerInvoicesPaid = customerInvoices?.filter(i => i.status === 'Paid').length || 0;
-      
-      const supplierInvoicesTotal = supplierInvoices?.reduce((sum, invoice) => sum + Number(invoice.amount), 0) || 0;
-      const supplierInvoicesPending = supplierInvoices?.filter(i => i.status === 'Pending').length || 0;
-      const supplierInvoicesPaid = supplierInvoices?.filter(i => i.status === 'Paid').length || 0;
-      
-      const totalExpenses = (
-        (expenses?.reduce((sum, record) => sum + Number(record.amount), 0) || 0) +
-        (supplierInvoices?.filter(i => i.status === 'Paid')
-          .reduce((sum, invoice) => sum + Number(invoice.amount), 0) || 0)
-      );
-      
-      setStats({
-        totalRevenue,
-        customerInvoices: {
-          total: customerInvoicesTotal,
-          pending: customerInvoicesPending,
-          paid: customerInvoicesPaid
-        },
-        supplierInvoices: {
-          total: supplierInvoicesTotal,
-          pending: supplierInvoicesPending,
-          paid: supplierInvoicesPaid
-        },
-        totalExpenses
-      });
-      
+
+      if (expenseError) throw expenseError;
+
+      const totalIncome = incomeRecords?.reduce((sum, record) => sum + Number(record.amount), 0) || 0;
+      const totalExpenses = expenseRecords?.reduce((sum, record) => sum + Number(record.amount), 0) || 0;
+      const profit = totalIncome - totalExpenses;
+
+      setStats({ totalIncome, totalExpenses, profit });
     } catch (error) {
       console.error('Error fetching stats:', error);
       throw error;
@@ -431,23 +231,7 @@ export default function Dashboard() {
       header: "Amount", 
       accessorKey: "amount",
       cell: (item: any) => formatCurrency(item.amount)
-    },
-    { header: "Type", accessorKey: "type" },
-    { 
-      header: "Status", 
-      accessorKey: "status",
-      cell: (item: any) => (
-        <div className={`px-2 py-1 rounded-full text-xs font-medium inline-flex items-center ${
-          item.status === "Paid" || item.status === "Completed" 
-            ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400" 
-            : item.status === "Pending" 
-            ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-            : "bg-gray-50 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400"
-        }`}>
-          {item.status}
-        </div>
-      )
-    },
+    }
   ];
   return (
     <div className="space-y-6">
@@ -465,35 +249,28 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <StatCard 
-              title="Total Revenue" 
-              value={formatCurrency(stats.totalRevenue)} 
-              description="All time revenue" 
+              title="Profit" 
+              value={formatCurrency(stats.profit)} 
+              description="All time profit" 
               icon={DollarSign}
               trend={10} // You could calculate this from monthly data
             />
             <StatCard 
-              title="Customer Invoices" 
-              value={formatCurrency(stats.customerInvoices.total)} 
-              description={`${stats.customerInvoices.pending} pending, ${stats.customerInvoices.paid} paid`} 
-              icon={Receipt}
+              title="Total Income" 
+              value={formatCurrency(stats.totalIncome)} 
+              description="All time income" 
+              icon={Wallet}
               trend={5} 
-            />
-            <StatCard 
-              title="Supplier Invoices" 
-              value={formatCurrency(stats.supplierInvoices.total)} 
-              description={`${stats.supplierInvoices.pending} pending, ${stats.supplierInvoices.paid} paid`} 
-              icon={Package}
-              trend={stats.supplierInvoices.pending > 0 ? -5 : 0}
             />
             <StatCard 
               title="Total Expenses" 
               value={formatCurrency(stats.totalExpenses)} 
-              description={stats.totalRevenue > 0 
-                ? `${Math.round((stats.totalExpenses / stats.totalRevenue) * 100)}% of revenue` 
-                : "No revenue yet"}
-              icon={Wallet}
+              description={stats.totalIncome > 0 
+                ? `${Math.round((stats.totalExpenses / stats.totalIncome) * 100)}% of income` 
+                : "No income yet"}
+              icon={Package}
               trend={-5} 
             />
           </div>
@@ -506,7 +283,7 @@ export default function Dashboard() {
           <DataTable 
             data={transactions} 
             columns={transactionColumns}
-            title="Recent Transactions"
+            title="Recent Income Transactions"
             onRowClick={() => {}}
           />
         </>
