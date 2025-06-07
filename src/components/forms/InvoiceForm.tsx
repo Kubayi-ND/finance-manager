@@ -5,6 +5,8 @@ import { z } from "zod";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useSession } from "@supabase/auth-helpers-react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -67,7 +69,10 @@ type InvoiceFormProps = {
 };
 
 export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
+  const session = useSession();
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const schema = type === "supplier" ? supplierInvoiceSchema : customerInvoiceSchema;
+  
   // Initialize the form
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -86,7 +91,17 @@ export default function InvoiceForm({ type, onSuccess }: InvoiceFormProps) {
           status: "Pending",
         },
   });
+
+  useEffect(() => {
+    setIsSignedIn(!!session);
+  }, [session]);
+
   function onSubmit(values: z.infer<typeof schema>) {
+    if (!session) {
+      toast.error("Please request authentication to perform this action.");
+      return;
+    }
+
     console.log(values);
     toast.success(
       `${type === "supplier" ? "Supplier" : "Customer"} invoice created`,

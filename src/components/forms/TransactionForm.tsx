@@ -90,7 +90,7 @@ export default function TransactionForm({ type, onSuccess }: TransactionFormProp
 
   function onSubmit(values: z.infer<typeof schema>) {
     if (!session) {
-      toast.error("Please sign-in to perform this action.");
+      toast.error("Please request authentication to perform this action.");
       return;
     }
 
