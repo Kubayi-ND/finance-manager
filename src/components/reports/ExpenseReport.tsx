@@ -59,7 +59,7 @@ export default function ExpenseReport({
           <div>
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Summary</h3>
-              <span className="text-lg font-bold">${totalExpenses.toFixed(2)}</span>
+              <span className="text-lg font-bold">R{totalExpenses.toFixed(2)}</span>
             </div>
             <Separator className="my-2" />
             
@@ -67,11 +67,11 @@ export default function ExpenseReport({
               <div className="p-3 bg-muted rounded">
                 <p className="text-sm text-muted-foreground">Largest Expense Category</p>
                 <p className="font-medium">{largestCategory.category}</p>
-                <p className="font-bold">${largestCategory.amount.toFixed(2)}</p>
+                <p className="font-bold">R{largestCategory.amount.toFixed(2)}</p>
               </div>
               <div className="p-3 bg-muted rounded">
                 <p className="text-sm text-muted-foreground">Avg. Monthly Expenses</p>
-                <p className="font-medium">${(totalExpenses / data.monthlyTrend.length).toFixed(2)}</p>
+                <p className="font-medium">R{(totalExpenses / data.monthlyTrend.length).toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -84,13 +84,13 @@ export default function ExpenseReport({
               {data.expenses.sort((a, b) => b.amount - a.amount).map((item, index) => (
                 <div key={index} className="flex justify-between">
                   <span>{item.category}</span>
-                  <span>${item.amount.toFixed(2)}</span>
+                  <span>R{item.amount.toFixed(2)}</span>
                 </div>
               ))}
               
               <div className="flex justify-between font-medium pt-2 border-t">
                 <span>Total Expenses</span>
-                <span>${totalExpenses.toFixed(2)}</span>
+                <span>R{totalExpenses.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function ExpenseReport({
               {data.monthlyTrend.map((item, index) => (
                 <div key={index} className="flex justify-between">
                   <span>{item.month}</span>
-                  <span>${item.amount.toFixed(2)}</span>
+                  <span>R{item.amount.toFixed(2)}</span>
                 </div>
               ))}
             </div>

@@ -61,7 +61,7 @@ export default function SalesReport({
           <div>
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Summary</h3>
-              <span className="text-lg font-bold text-green-600">${totalSales.toFixed(2)}</span>
+              <span className="text-lg font-bold text-green-600">R{totalSales.toFixed(2)}</span>
             </div>
             <Separator className="my-2" />
             
@@ -78,7 +78,7 @@ export default function SalesReport({
               <div className="p-3 bg-muted rounded">
                 <p className="text-sm text-muted-foreground">Avg. Sale Value</p>
                 <p className="font-medium">
-                  ${(totalSales / data.sales.reduce((sum, item) => sum + 1, 0)).toFixed(2)}
+                  R{(totalSales / data.sales.reduce((sum, item) => sum + 1, 0)).toFixed(2)}
                 </p>
               </div>
             </div>
@@ -102,13 +102,13 @@ export default function SalesReport({
                     <tr key={index} className="border-b border-muted">
                       <td className="py-2">{item.product}</td>
                       <td className="text-right py-2">{item.quantity}</td>
-                      <td className="text-right py-2">${item.revenue.toFixed(2)}</td>
+                      <td className="text-right py-2">R{item.revenue.toFixed(2)}</td>
                     </tr>
                   ))}
                   <tr className="font-medium">
                     <td className="py-2">Total</td>
                     <td className="text-right py-2">{totalQuantity}</td>
-                    <td className="text-right py-2">${totalSales.toFixed(2)}</td>
+                    <td className="text-right py-2">R{totalSales.toFixed(2)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -124,7 +124,7 @@ export default function SalesReport({
                 {data.monthlySales.map((item, index) => (
                   <div key={index} className="flex justify-between">
                     <span>{item.month}</span>
-                    <span>${item.revenue.toFixed(2)}</span>
+                    <span>R{item.revenue.toFixed(2)}</span>
                   </div>
                 ))}
               </div>
@@ -138,7 +138,7 @@ export default function SalesReport({
                 {data.topCustomers.map((item, index) => (
                   <div key={index} className="flex justify-between">
                     <span>{item.name}</span>
-                    <span>${item.revenue.toFixed(2)}</span>
+                    <span>R{item.revenue.toFixed(2)}</span>
                   </div>
                 ))}
               </div>

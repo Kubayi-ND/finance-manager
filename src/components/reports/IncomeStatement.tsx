@@ -63,13 +63,13 @@ export default function IncomeStatement({
               {data.revenues.map((item, index) => (
                 <div key={index} className="flex justify-between">
                   <span>{item.category}</span>
-                  <span>${item.amount.toFixed(2)}</span>
+                  <span>R{item.amount.toFixed(2)}</span>
                 </div>
               ))}
               
               <div className="flex justify-between font-medium pt-2">
                 <span>Total Revenue</span>
-                <span>${totalRevenue.toFixed(2)}</span>
+                <span>R{totalRevenue.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -82,13 +82,13 @@ export default function IncomeStatement({
               {data.expenses.map((item, index) => (
                 <div key={index} className="flex justify-between">
                   <span>{item.category}</span>
-                  <span>${item.amount.toFixed(2)}</span>
+                  <span>R{item.amount.toFixed(2)}</span>
                 </div>
               ))}
               
               <div className="flex justify-between font-medium pt-2">
                 <span>Total Expenses</span>
-                <span>${totalExpenses.toFixed(2)}</span>
+                <span>R{totalExpenses.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function IncomeStatement({
             <div className="flex justify-between text-lg font-bold">
               <span>Net Profit</span>
               <span className={netProfit >= 0 ? "text-green-600" : "text-red-600"}>
-                ${netProfit.toFixed(2)}
+                R{netProfit.toFixed(2)}
               </span>
             </div>
           </div>
